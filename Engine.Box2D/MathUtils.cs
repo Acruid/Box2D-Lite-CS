@@ -80,7 +80,7 @@ public struct Vec2
         this.y = y;
     }
 
-	void Set(float x_, float y_) { x = x_; y = y_; }
+    public void Set(float x_, float y_) { x = x_; y = y_; }
 
 	public static Vec2 operator -(Vec2 a) { return new Vec2(-a.x, -a.y); }
 
