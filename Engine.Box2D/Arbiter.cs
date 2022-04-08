@@ -16,10 +16,10 @@ namespace Engine.Box2D;
 
 struct Edges
 {
-    byte inEdge1;
-    byte outEdge1;
-    byte inEdge2;
-    byte outEdge2;
+    public byte inEdge1;
+    public byte outEdge1;
+    public byte inEdge2;
+    public byte outEdge2;
 }
 
 [StructLayout(LayoutKind.Explicit)]
@@ -99,7 +99,7 @@ struct Arbiter
             body2 = b1;
         }
 
-        numContacts = Collide(contacts, body1, body2);
+        numContacts = Collision(contacts, body1, body2);
 
         friction = MathF.Sqrt(body1->friction * body2->friction);
 
