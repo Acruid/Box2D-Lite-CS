@@ -13,7 +13,6 @@ namespace Engine.Box2D;
 
 struct Body
 {
-
     public Body()
     {
         position = new Vec2(0.0f, 0.0f);
@@ -31,7 +30,7 @@ struct Body
         invI = 0.0f;
     }
 
-    void Set(in Vec2 w, float m)
+    public void Set(in Vec2 w, float m)
     {
         position.Set(0.0f, 0.0f);
         rotation = 0.0f;
@@ -63,18 +62,20 @@ struct Body
         force += f;
     }
 
-    Vec2 position;
-    float rotation;
+    public Vec2 position;
+    public float rotation;
 
-    Vec2 velocity;
-    float angularVelocity;
+    public Vec2 velocity;
+    public float angularVelocity;
 
-    Vec2 force;
-    float torque;
+    public Vec2 force;
+    public float torque;
 
-    Vec2 width;
+    public Vec2 width;
 
-    float friction;
-    float mass, invMass;
-    float I, invI;
+    public float friction;
+    public float mass;
+    public float invMass;
+    public float I;
+    public float invI;
 };
