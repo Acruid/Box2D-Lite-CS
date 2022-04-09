@@ -157,7 +157,7 @@ internal static class Collision
     }
 
     // The normal points from A to B
-    static int Collide(Contact[] contacts, ref Body bodyA, ref Body bodyB)
+    public static int Collide(Contact[] contacts, ref Body bodyA, ref Body bodyB)
     {
 	    // Setup
 	    Vec2 hA = 0.5f * bodyA.width;

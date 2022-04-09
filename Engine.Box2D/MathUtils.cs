@@ -72,7 +72,7 @@ public static class FMath
 }
 
 
-public struct Vec2
+public struct Vec2 : IEquatable<Vec2>
 {
     public Vec2(float x, float y)
     {
@@ -131,6 +131,35 @@ public struct Vec2
     {
         return new Vec2(MathF.Abs(a.x), MathF.Abs(a.y));
     }
+
+    #region Equality
+
+    public bool Equals(Vec2 other)
+    {
+        return x.Equals(other.x) && y.Equals(other.y);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is Vec2 other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(x, y);
+    }
+
+    public static bool operator ==(Vec2 left, Vec2 right)
+    {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(Vec2 left, Vec2 right)
+    {
+        return !left.Equals(right);
+    }
+
+    #endregion
 }
 
 public struct Mat22

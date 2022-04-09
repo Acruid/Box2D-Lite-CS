@@ -28,13 +28,13 @@ struct Joint
         softness = 0;
     }
 
-    void Set(Memory<Body> b1, Memory<Body> b2, in Vec2 anchor)
+    public void Set(Span<Body> bodies, BodyIndex b1, BodyIndex b2, in Vec2 anchor)
     {
         body1Ref = b1;
         body2Ref = b2;
 
-        ref var body1 = ref body1Ref.Span[0];
-        ref var body2 = ref body2Ref.Span[0];
+        ref var body1 = ref bodies[b1];
+        ref var body2 = ref bodies[b2];
 
         Mat22 Rot1 = new(body1.rotation);
         Mat22 Rot2 = new(body2.rotation);
@@ -50,10 +50,10 @@ struct Joint
         biasFactor = 0.2f;
     }
 
-    public void PreStep(float inv_dt)
+    public void PreStep(Span<Body> bodies, float inv_dt)
     {
-        ref var body1 = ref body1Ref.Span[0];
-        ref var body2 = ref body2Ref.Span[0];
+        ref var body1 = ref bodies[body1Ref];
+        ref var body2 = ref bodies[body2Ref];
 
         // Pre-compute anchors, mass matrix, and bias.
         Mat22 Rot1 = new(body1.rotation);
@@ -112,10 +112,10 @@ struct Joint
         }
     }
 
-    public void ApplyImpulse()
+    public void ApplyImpulse(Span<Body> bodies)
     {
-        ref var body1 = ref body1Ref.Span[0];
-        ref var body2 = ref body2Ref.Span[0];
+        ref var body1 = ref bodies[body1Ref];
+        ref var body2 = ref bodies[body2Ref];
 
         Vec2 dv = body2.velocity + Vec2.Cross(body2.angularVelocity, r2) - body1.velocity - Vec2.Cross(body1.angularVelocity, r1);
 
@@ -133,12 +133,13 @@ struct Joint
     }
 
 	Mat22 M;
-	Vec2 localAnchor1, localAnchor2;
-	Vec2 r1, r2;
+    public Vec2 localAnchor1;
+    public Vec2 localAnchor2;
+    Vec2 r1, r2;
 	Vec2 bias;
 	Vec2 P;		// accumulated impulse
-	Memory<Body> body1Ref;
-    Memory<Body> body2Ref;
-	float biasFactor;
-	float softness;
+	public BodyIndex body1Ref;
+    public BodyIndex body2Ref;
+    public float biasFactor;
+    public float softness;
 };

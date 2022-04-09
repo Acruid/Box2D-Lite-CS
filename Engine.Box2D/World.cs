@@ -15,7 +15,7 @@ namespace Engine.Box2D;
 
 struct World
 {
-    World(Vec2 gravity, int iterations)
+    public World(Vec2 gravity, int iterations)
     {
         this.gravity = gravity;
         this.iterations = iterations;
@@ -24,24 +24,24 @@ struct World
         arbiters = new Dictionary<ArbiterKey, Arbiter>();
     }
 
-    void Add(ref Body body)
+    public void Add(ref Body body)
     {
         bodies.Add(body);
     }
 
-    void Add(ref Joint joint)
+    public void Add(ref Joint joint)
     {
         joints.Add(joint);
     }
 
-    void Clear()
+    public void Clear()
     {
         bodies.Clear();
         joints.Clear();
         arbiters.Clear();
     }
 
-    void Step(float dt)
+    public void Step(float dt)
     {
         float inv_dt = dt > 0.0f ? 1.0f / dt : 0.0f;
 
@@ -66,12 +66,12 @@ struct World
         // Perform pre-steps.
         foreach (var kvArbiter in arbiters)
         {
-            kvArbiter.Value.PreStep(inv_dt);
+            kvArbiter.Value.PreStep(spanBodies, inv_dt);
         }
 
         for (int i = 0; i < joints.Count; ++i)
         {
-            joints[i].PreStep(inv_dt);	
+            joints[i].PreStep(spanBodies, inv_dt);	
         }
 
         // Perform iterations
@@ -79,12 +79,12 @@ struct World
         {
             foreach (var kvArbiter in arbiters)
             {
-                kvArbiter.Value.ApplyImpulse();
+                kvArbiter.Value.ApplyImpulse(spanBodies);
             }
 
             for (int j = 0; j < (int)joints.Count; ++j)
             {
-                joints[j].ApplyImpulse();
+                joints[j].ApplyImpulse(spanBodies);
             }
         }
 
@@ -118,8 +118,8 @@ struct World
                 if (bi.invMass == 0.0f && bj.invMass == 0.0f)
                     continue;
 
-                Arbiter newArb = new(bi, bj);
-                ArbiterKey key = new(bi, bj);
+                Arbiter newArb = new(spanBodies, new BodyIndex(i), new BodyIndex(j));
+                ArbiterKey key = new(new BodyIndex(i), new BodyIndex(j));
 
                 if (newArb.numContacts > 0)
                 {

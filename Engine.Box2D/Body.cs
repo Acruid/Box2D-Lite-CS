@@ -11,7 +11,52 @@
 
 namespace Engine.Box2D;
 
-struct Body
+public readonly struct BodyIndex : IEquatable<BodyIndex>
+{
+    public static readonly BodyIndex Invalid = new(-1);
+
+    public readonly int Value;
+
+    public BodyIndex(int value)
+    {
+        Value = value;
+    }
+
+    public static implicit operator int(BodyIndex val) => val.Value;
+
+    public static explicit operator BodyIndex(int val) => new(val);
+
+    #region Equality
+
+    public bool Equals(BodyIndex other)
+    {
+        return Value == other.Value;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is BodyIndex other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return Value;
+    }
+
+    public static bool operator ==(BodyIndex left, BodyIndex right)
+    {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(BodyIndex left, BodyIndex right)
+    {
+        return !left.Equals(right);
+    }
+
+    #endregion
+}
+
+struct Body : IEquatable<Body>
 {
     public Body()
     {
@@ -78,4 +123,57 @@ struct Body
     public float invMass;
     public float I;
     public float invI;
+
+    #region Equality
+
+    public bool Equals(Body other)
+    {
+        return position.Equals(other.position)
+               && rotation.Equals(other.rotation)
+               && velocity.Equals(other.velocity)
+               && angularVelocity.Equals(other.angularVelocity)
+               && force.Equals(other.force)
+               && torque.Equals(other.torque)
+               && width.Equals(other.width)
+               && friction.Equals(other.friction)
+               && mass.Equals(other.mass)
+               && invMass.Equals(other.invMass)
+               && I.Equals(other.I)
+               && invI.Equals(other.invI);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is Body other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        var hashCode = new HashCode();
+        hashCode.Add(position);
+        hashCode.Add(rotation);
+        hashCode.Add(velocity);
+        hashCode.Add(angularVelocity);
+        hashCode.Add(force);
+        hashCode.Add(torque);
+        hashCode.Add(width);
+        hashCode.Add(friction);
+        hashCode.Add(mass);
+        hashCode.Add(invMass);
+        hashCode.Add(I);
+        hashCode.Add(invI);
+        return hashCode.ToHashCode();
+    }
+
+    public static bool operator ==(Body left, Body right)
+    {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(Body left, Body right)
+    {
+        return !left.Equals(right);
+    }
+
+    #endregion
 };
