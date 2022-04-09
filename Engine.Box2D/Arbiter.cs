@@ -47,7 +47,7 @@ struct Contact
     public FeaturePair feature;
 };
 
-struct ArbiterKey
+readonly struct ArbiterKey
 {
 	public ArbiterKey(Body* b1, Body* b2)
 	{
@@ -114,7 +114,7 @@ struct Arbiter
         GL.PointSize(1.0f);
     }
 
-    void Update(Contact* newContacts, int numNewContacts)
+    public void Update(Contact[] newContacts, int numNewContacts)
     {
         Span<Contact> mergedContacts = stackalloc Contact[2];
 
@@ -162,7 +162,7 @@ struct Arbiter
         numContacts = numNewContacts;
     }
 
-	void PreStep(float inv_dt)
+    public void PreStep(float inv_dt)
     {
         const float k_allowedPenetration = 0.01f;
         float k_biasFactor = World::positionCorrection ? 0.2f : 0.0f;
@@ -204,7 +204,7 @@ struct Arbiter
         }
     }
 
-	void ApplyImpulse()
+    public void ApplyImpulse()
     {
         Body* b1 = body1;
         Body* b2 = body2;
@@ -277,9 +277,9 @@ struct Arbiter
             b2->angularVelocity += b2->invI * Vec2.Cross(c->r2, Pt);
         }
     }
-	
-	Contact[] contacts = new Contact[MAX_POINTS];
-	int numContacts;
+
+    public Contact[] contacts = new Contact[MAX_POINTS];
+    public int numContacts;
 
 	Body* body1;
 	Body* body2;

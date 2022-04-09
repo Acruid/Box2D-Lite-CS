@@ -9,16 +9,25 @@
 * It is provided "as is" without express or implied warranty.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace Engine.Box2D;
 
 struct Joint
 {
+    public Joint()
+    {
+        M = default;
+        localAnchor1 = default;
+        localAnchor2 = default;
+        r1 = default;
+        r2 = default;
+        bias = default;
+        P = default;
+        body1Ref = default;
+        body2Ref = default;
+        biasFactor = 0.2f;
+        softness = 0;
+    }
+
     void Set(Memory<Body> b1, Memory<Body> b2, in Vec2 anchor)
     {
         body1Ref = b1;
@@ -41,7 +50,7 @@ struct Joint
         biasFactor = 0.2f;
     }
 
-	void PreStep(float inv_dt)
+    public void PreStep(float inv_dt)
     {
         ref var body1 = ref body1Ref.Span[0];
         ref var body2 = ref body2Ref.Span[0];
@@ -59,7 +68,7 @@ struct Joint
         //        [    0     1/m1+1/m2]           [-r1.x*r1.y r1.x*r1.x]           [-r1.x*r1.y r1.x*r1.x]
         Mat22 K1;
         K1.col1.x = body1.invMass + body2.invMass;	K1.col2.x = 0.0f;
-        K1.col1.y = 0.0f;								K1.col2.y = body1.invMass + body2.invMass;
+        K1.col1.y = 0.0f;							K1.col2.y = body1.invMass + body2.invMass;
 
         Mat22 K2;
         K2.col1.x =  body1.invI * r1.y * r1.y;		K2.col2.x = -body1.invI * r1.x * r1.y;
@@ -79,7 +88,7 @@ struct Joint
         Vec2 p2 = body2.position + r2;
         Vec2 dp = p2 - p1;
 
-        if (World::positionCorrection)
+        if (World.positionCorrection)
         {
             bias = -biasFactor * inv_dt * dp;
         }
@@ -88,7 +97,7 @@ struct Joint
             bias.Set(0.0f, 0.0f);
         }
 
-        if (World::warmStarting)
+        if (World.warmStarting)
         {
             // Apply accumulated impulse.
             body1.velocity -= body1.invMass * P;
@@ -103,7 +112,7 @@ struct Joint
         }
     }
 
-	void ApplyImpulse()
+    public void ApplyImpulse()
     {
         ref var body1 = ref body1Ref.Span[0];
         ref var body2 = ref body2Ref.Span[0];
@@ -130,6 +139,6 @@ struct Joint
 	Vec2 P;		// accumulated impulse
 	Memory<Body> body1Ref;
     Memory<Body> body2Ref;
-	float biasFactor = 0.2f;
+	float biasFactor;
 	float softness;
 };
