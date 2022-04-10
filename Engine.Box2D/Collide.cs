@@ -56,9 +56,11 @@ internal static class Collision
         FMath.Swap(ref fp.e.outEdge1, ref fp.e.outEdge2);
     }
 
-    static int ClipSegmentToLine(Span<ClipVertex> vOut, Span<ClipVertex> vIn,
+    static int ClipSegmentToLine(Span<ClipVertex> vOut, ReadOnlySpan<ClipVertex> vIn,
 					      in Vec2 normal, float offset, byte clipEdge)
     {
+		// https://www.youtube.com/watch?v=VV1GyzVRYa4&t=893s
+
 	    // Start with no output points
 	    int numOut = 0;
 
@@ -97,6 +99,8 @@ internal static class Collision
     static void ComputeIncidentEdge(Span<ClipVertex> c, in Vec2 h, in Vec2 pos,
 								    in Mat22 Rot, in Vec2 normal)
     {
+		// https://www.youtube.com/watch?v=VV1GyzVRYa4&t=510s
+
 		Debug.Assert(c.Length == 2);
 
 	    // The normal is from the reference box. Convert it
@@ -152,6 +156,7 @@ internal static class Collision
 		    }
 	    }
 
+		// Rotate the result from local box space to world space
 	    c[0].v = pos + Rot * c[0].v;
 	    c[1].v = pos + Rot * c[1].v;
     }
@@ -159,41 +164,77 @@ internal static class Collision
     // The normal points from A to B
     public static int Collide(Contact[] contacts, ref Body bodyA, ref Body bodyB)
     {
-	    // Setup
+	    // -- 1. Setup --
+        // https://www.youtube.com/watch?v=0qqzGkbLbpM&t=115s
+
+		// calc half extents of A and B
 	    Vec2 hA = 0.5f * bodyA.width;
 	    Vec2 hB = 0.5f * bodyB.width;
 
+		// get position of A and B
 	    Vec2 posA = bodyA.position;
 	    Vec2 posB = bodyB.position;
 
+		// -- 2. Projections --
+		// https://www.youtube.com/watch?v=0qqzGkbLbpM&t=303s
+
+		// Generate 2x2 rotation matrix for A and B
+		// rotates a vector from world into bodies' local space
 	    Mat22 RotA = new(bodyA.rotation);
         Mat22 RotB = new(bodyB.rotation);
 
-	    Mat22 RotAT = RotA.Transpose();
+		// Generate the transpose of the bodies' rotation matrix
+	    // this rotates a vector from local to world
+        Mat22 RotAT = RotA.Transpose();
 	    Mat22 RotBT = RotB.Transpose();
 
+		// -- 3. Transformations --
+		// https://www.youtube.com/watch?v=0qqzGkbLbpM&t=579s
+
+		// calc delta position between the two bodies, then rotate
+		// the dp into each of the bodies' local spaces
         Vec2 dp = posB - posA;
 	    Vec2 dA = RotAT * dp;
 	    Vec2 dB = RotBT * dp;
 
+		// This matrix rotates a vector from B's local space into
+		// A's local space.
 	    Mat22 C = RotAT * RotB;
 	    Mat22 absC = Mat22.Abs(C);
-	    Mat22 absCT = absC.Transpose();
+		// This matrix rotates a vector from A's local space into B's local space.
+        Mat22 absCT = absC.Transpose();
+
+		// -- 4. Rotated SAT solver --
+		// https://www.youtube.com/watch?v=0qqzGkbLbpM&t=677s
 
 	    // Box A faces
+		// This does a dot product by using the transformation matrix and
+		// matrix multiplication rules. Very condensed...
+		// Basically it's just projecting along all the faces
 	    Vec2 faceA = Vec2.Abs(dA) - hA - absC * hB;
-	    if (faceA.x > 0.0f || faceA.y > 0.0f)
+	    
+        // If there is positive face volume, the two rectangles cannot be overlapping.
+        if (faceA.x > 0.0f || faceA.y > 0.0f)
 		    return 0;
 
 	    // Box B faces
+		// This does the same thing just for B instead of A
 	    Vec2 faceB = Vec2.Abs(dB) - absCT * hA - hB;
 	    if (faceB.x > 0.0f || faceB.y > 0.0f)
 		    return 0;
 
 	    // Find best axis
+		// the "best axis" is the axis with the least amount of penetration, which
+		// we want to separate the rectangles on.
 	    Axis axis;
 	    float separation;
 	    Vec2 normal;
+
+		// -- 5. Finding the Best Axis and Separation Amount --
+		// https://www.youtube.com/watch?v=0qqzGkbLbpM&t=990s
+
+		// Remember the columns in the rotation matrix are the basis vectors
+		// col1 is x axis, col2 is y axis
 
 	    // Box A faces
 	    axis = Axis.FACE_A_X;
@@ -202,6 +243,8 @@ internal static class Collision
 
 	    const float relativeTol = 0.95f;
 	    const float absoluteTol = 0.01f;
+
+		// faceA.X is initially the best, it is assigned above
 
 	    if (faceA.y > relativeTol * separation + absoluteTol * hA.y)
 	    {
@@ -225,13 +268,22 @@ internal static class Collision
 		    normal = dB.y > 0.0f ? RotB.col2 : -RotB.col2;
 	    }
 
+		// -- 6. 
+		// https://www.youtube.com/watch?v=VV1GyzVRYa4&t=106s
+
 	    // Setup clipping plane data based on the separating axis
+
+		// The front normal will be the normal in the direction of the collision
+		// The side normal is perpendicular to the front normal
+		// The incident edges are the two edges that are where the collision happened
+		// (1 incident edge, 2 reference edge)
+
 	    Vec2 frontNormal, sideNormal;
 	    Span<ClipVertex> incidentEdge = stackalloc ClipVertex[2];
 	    float front, negSide, posSide;
 	    byte negEdge, posEdge;
 
-		// Initialize variables
+		// C# thing, Initialize variables
         {
             frontNormal = default;
             front = default;
@@ -249,7 +301,7 @@ internal static class Collision
 		    {
 			    frontNormal = normal;
 			    front = Vec2.Dot(posA, frontNormal) + hA.x;
-			    sideNormal = RotA.col2;
+			    sideNormal = RotA.col2; // perpendicular to front
 			    float side = Vec2.Dot(posA, sideNormal);
 			    negSide = -side + hA.y;
 			    posSide =  side + hA.y;
@@ -319,6 +371,8 @@ internal static class Collision
 
 	    if (np < 2)
 		    return 0;
+
+		// https://www.youtube.com/watch?v=VV1GyzVRYa4&t=1336s
 
 	    // Now clipPoints2 contains the clipping points.
 	    // Due to roundoff, it is possible that clipping removes all points.
