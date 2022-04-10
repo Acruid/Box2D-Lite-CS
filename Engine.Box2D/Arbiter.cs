@@ -225,7 +225,7 @@ struct Arbiter
             kTangent += body1.invI * (Vec2.Dot(r1, r1) - rt1 * rt1) + body2.invI * (Vec2.Dot(r2, r2) - rt2 * rt2);
             c.massTangent = 1.0f /  kTangent;
 
-            c.bias = -k_biasFactor * inv_dt * FMath.Min(0.0f, c.separation + k_allowedPenetration);
+            c.bias = -k_biasFactor * inv_dt * MathF.Min(0.0f, c.separation + k_allowedPenetration);
 
             if (World.accumulateImpulses)
             {
@@ -264,12 +264,12 @@ struct Arbiter
             {
                 // Clamp the accumulated impulse
                 float Pn0 = c.Pn;
-                c.Pn = FMath.Max(Pn0 + dPn, 0.0f);
+                c.Pn = MathF.Max(Pn0 + dPn, 0.0f);
                 dPn = c.Pn - Pn0;
             }
             else
             {
-                dPn = FMath.Max(dPn, 0.0f);
+                dPn = MathF.Max(dPn, 0.0f);
             }
 
             // Apply contact impulse

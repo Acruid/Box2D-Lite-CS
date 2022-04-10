@@ -19,37 +19,24 @@ struct World
     {
         this.gravity = gravity;
         this.iterations = iterations;
-        bodies = new List<Body>();
-        joints = new List<Joint>();
         arbiters = new Dictionary<ArbiterKey, Arbiter>();
-    }
-
-    public void Add(ref Body body)
-    {
-        bodies.Add(body);
-    }
-
-    public void Add(ref Joint joint)
-    {
-        joints.Add(joint);
     }
 
     public void Clear()
     {
-        bodies.Clear();
-        joints.Clear();
         arbiters.Clear();
     }
 
     public void Step(float dt)
     {
         float inv_dt = dt > 0.0f ? 1.0f / dt : 0.0f;
-
-        // Determine overlapping bodies and update contact points.
-        BroadPhase();
         
         // don't modify bodies while in use
-        var spanBodies = CollectionsMarshal.AsSpan(bodies);
+        var spanBodies = new Span<Body>(Program.bodies, 0, Program.numBodies);
+        var joints = new Span<Joint>(Program.joints, 0, Program.numJoints);
+
+        // Determine overlapping bodies and update contact points.
+        BroadPhase(spanBodies);
 
         // Integrate forces.
         for (int i = 0; i < (int)spanBodies.Length; ++i)
@@ -66,10 +53,11 @@ struct World
         // Perform pre-steps.
         foreach (var kvArbiter in arbiters)
         {
-            kvArbiter.Value.PreStep(spanBodies, inv_dt);
+            ref Arbiter arb = ref CollectionsMarshal.GetValueRefOrNullRef(arbiters, kvArbiter.Key);
+            arb.PreStep(spanBodies, inv_dt);
         }
 
-        for (int i = 0; i < joints.Count; ++i)
+        for (int i = 0; i < joints.Length; ++i)
         {
             joints[i].PreStep(spanBodies, inv_dt);	
         }
@@ -79,10 +67,11 @@ struct World
         {
             foreach (var kvArbiter in arbiters)
             {
-                kvArbiter.Value.ApplyImpulse(spanBodies);
+                ref Arbiter arb = ref CollectionsMarshal.GetValueRefOrNullRef(arbiters, kvArbiter.Key);
+                arb.ApplyImpulse(spanBodies);
             }
 
-            for (int j = 0; j < (int)joints.Count; ++j)
+            for (int j = 0; j < joints.Length; ++j)
             {
                 joints[j].ApplyImpulse(spanBodies);
             }
@@ -101,11 +90,8 @@ struct World
         }
     }
 
-    void BroadPhase()
+    void BroadPhase(Span<Body> spanBodies)
     {
-        // don't modify bodies while in use
-        var spanBodies = CollectionsMarshal.AsSpan(bodies);
-
         // O(n^2) broad-phase
         for (int i = 0; i < spanBodies.Length; ++i)
         {
@@ -140,8 +126,6 @@ struct World
         }
     }
 
-    readonly List<Body> bodies;
-    readonly List<Joint> joints;
     readonly Dictionary<ArbiterKey, Arbiter> arbiters;
     Vec2 gravity;
     int iterations;

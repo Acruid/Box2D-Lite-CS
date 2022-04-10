@@ -43,7 +43,7 @@ public static class FMath
 
     public static float Clamp(float a, float low, float high)
     {
-        return Max(low, Min(a, high));
+        return MathF.Max(low, MathF.Min(a, high));
     }
 
     public static void Swap<T>(ref T a, ref T b)
@@ -160,6 +160,11 @@ public struct Vec2 : IEquatable<Vec2>
     }
 
     #endregion
+
+    public override string ToString()
+    {
+        return $"{x},{y}";
+    }
 }
 
 public struct Mat22

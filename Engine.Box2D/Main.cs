@@ -9,14 +9,20 @@
 * It is provided "as is" without express or implied warranty.
 */
 
+using System.Diagnostics;
 using OpenTK.Graphics.OpenGL;
+using OpenTK.Mathematics;
+using OpenTK.Windowing.Common;
+using OpenTK.Windowing.Desktop;
+using OpenTK.Windowing.GraphicsLibraryFramework;
+using ErrorCode = OpenTK.Graphics.OpenGL.ErrorCode;
 
 namespace Engine.Box2D;
 
 internal static class Program
 {
-    static Body[] bodies = new Body[200];
-    static Joint[] joints = new Joint[100];
+    public static Body[] bodies = new Body[200];
+    public static Joint[] joints = new Joint[100];
 	
     static Body bomb = default;
 
@@ -24,8 +30,8 @@ internal static class Program
     static int iterations = 10;
     static Vec2 gravity = new(0.0f, -10.0f);
 
-    static int numBodies = 0;
-    static int numJoints = 0;
+    public static int numBodies = 0;
+    public static int numJoints = 0;
 
     static int demoIndex = 0;
 
@@ -35,6 +41,7 @@ internal static class Program
     {
 	    int len, i;
 
+        /*
         GL.MatrixMode(MatrixMode.Projection);
         GL.PushMatrix();
         GL.LoadIdentity();
@@ -54,6 +61,7 @@ internal static class Program
         GL.PopMatrix();
         GL.MatrixMode(MatrixMode.Projection);
         GL.PopMatrix();
+		*/
         GL.MatrixMode(MatrixMode.Modelview);
     }
 
@@ -67,18 +75,34 @@ internal static class Program
 	    Vec2 v2 = x + R * new Vec2( h.x, -h.y);
 	    Vec2 v3 = x + R * new Vec2( h.x,  h.y);
 	    Vec2 v4 = x + R * new Vec2(-h.x,  h.y);
-
+		
+        GlCheckError();
 	    if (body == bomb)
 		    GL.Color3(0.4f, 0.9f, 0.4f);
 	    else
 		    GL.Color3(0.8f, 0.8f, 0.9f);
-
-        GL.Begin(BeginMode.LineLoop);
+		
+        GlCheckError();
+        GL.Begin(PrimitiveType.LineLoop);
         GL.Vertex2(v1.x, v1.y);
         GL.Vertex2(v2.x, v2.y);
         GL.Vertex2(v3.x, v3.y);
         GL.Vertex2(v4.x, v4.y);
         GL.End();
+        GlCheckError();
+
+        Vec2 v = body.velocity;
+		GL.Begin(PrimitiveType.Lines);
+
+        GL.Color3(1f, 0.5f, 0.0f);
+        GL.Vertex2(x.x, x.y);
+        GL.Vertex2(x.x + v.x, x.y + v.y);
+		
+        // GL.Color3(0.8f, 0.8f, 0.9f);
+        // GL.Vertex2(x.x, x.y);
+        // GL.Vertex2(x.x, x.y);
+
+		GL.End();
     }
 
     static void DrawJoint(ref Joint joint)
@@ -94,14 +118,17 @@ internal static class Program
 
 	    Vec2 x2 = b2.position;
 	    Vec2 p2 = x2 + R2 * joint.localAnchor2;
-
+		
+        GlCheckError();
         GL.Color3(0.5f, 0.5f, 0.8f);
-        GL.Begin(BeginMode.Lines);
+        GlCheckError();
+        GL.Begin(PrimitiveType.Lines);
         GL.Vertex2(x1.x, x1.y);
         GL.Vertex2(p1.x, p1.y);
         GL.Vertex2(x2.x, x2.y);
         GL.Vertex2(p2.x, p2.y);
         GL.End();
+        GlCheckError();
     }
 
     static void LaunchBomb()
@@ -111,14 +138,13 @@ internal static class Program
 		    bomb = bodies[numBodies++];
 		    bomb.Set(new Vec2(1.0f, 1.0f), 50.0f);
 		    bomb.friction = 0.2f;
-		    world.Add(ref bomb);
-		    ++numBodies;
 	    }
 
 	    bomb.position.Set(FMath.Random(-15.0f, 15.0f), 15.0f);
 	    bomb.rotation = FMath.Random(-1.5f, 1.5f);
 	    bomb.velocity = -1.5f * bomb.position;
 	    bomb.angularVelocity = FMath.Random(-20.0f, 20.0f);
+        bodies[numBodies - 1] = bomb;
     }
 
     // Single box
@@ -127,12 +153,11 @@ internal static class Program
         ref Body b = ref sb[numBodies++];
         b.Set(new Vec2(100.0f, 20.0f), float.MaxValue);
 	    b.position.Set(0.0f, -0.5f * b.width.y);
-	    world.Add(ref b);
 
         b = ref sb[numBodies++];
         b.Set(new Vec2(1.0f, 1.0f), 200.0f);
 	    b.position.Set(0.0f, 4.0f);
-	    world.Add(ref b);
+        b.rotation = -0.25f;
     }
 
     // A simple pendulum
@@ -143,18 +168,15 @@ internal static class Program
 	    b1.friction = 0.2f;
 	    b1.position.Set(0.0f, -0.5f * b1.width.y);
 	    b1.rotation = 0.0f;
-	    world.Add(ref b1);
 
         ref Body b2 = ref sb[numBodies + 1];
 	    b2.Set(new Vec2(1.0f, 1.0f), 100.0f);
 	    b2.friction = 0.2f;
 	    b2.position.Set(9.0f, 11.0f);
 	    b2.rotation = 0.0f;
-	    world.Add(ref b2);
 
         ref Joint j = ref sj[numJoints++];
 	    j.Set(sb, new BodyIndex(numBodies + 0), new BodyIndex(numBodies + 1), new Vec2(0.0f, 11.0f));
-	    world.Add(ref j);
 
         numBodies += 2;
     }
@@ -165,37 +187,31 @@ internal static class Program
         ref Body b = ref sb[numBodies++];
 	    b.Set(new Vec2(100.0f, 20.0f), float.MaxValue);
 	    b.position.Set(0.0f, -0.5f * b.width.y);
-	    world.Add(ref b);
-		    
+
         b = ref sb[numBodies++];
 	    b.Set(new Vec2(13.0f, 0.25f), float.MaxValue);
 	    b.position.Set(-2.0f, 11.0f);
 	    b.rotation = -0.25f;
-	    world.Add(ref b);
-		    
+
         b = ref sb[numBodies++];
 	    b.Set(new Vec2(0.25f, 1.0f), float.MaxValue);
 	    b.position.Set(5.25f, 9.5f);
-	    world.Add(ref b);
-		    
+
         b = ref sb[numBodies++];
 	    b.Set(new Vec2(13.0f, 0.25f), float.MaxValue);
 	    b.position.Set(2.0f, 7.0f);
 	    b.rotation = 0.25f;
-	    world.Add(ref b);
-		    
+
         b = ref sb[numBodies++];
 	    b.Set(new Vec2(0.25f, 1.0f), float.MaxValue);
 	    b.position.Set(-5.25f, 5.5f);
-	    world.Add(ref b);
-		    
+
         b = ref sb[numBodies++];
 	    b.Set(new Vec2(13.0f, 0.25f), float.MaxValue);
 	    b.position.Set(-2.0f, 3.0f);
 	    b.rotation = -0.25f;
-	    world.Add(ref b);
 
-	    //C# does not support const arrays
+        //C# does not support const arrays
 	    float[] friction = {0.75f, 0.5f, 0.35f, 0.1f, 0.0f};
 	    for (int i = 0; i < 5; ++i)
 	    {
@@ -203,8 +219,7 @@ internal static class Program
 		    b.Set(new Vec2(0.5f, 0.5f), 25.0f);
 		    b.friction = friction[i];
 		    b.position.Set(-7.5f + 2.0f * i, 14.0f);
-		    world.Add(ref b);
-	    }
+        }
     }
 
     // A vertical stack
@@ -215,17 +230,15 @@ internal static class Program
 	    b.friction = 0.2f;
 	    b.position.Set(0.0f, -0.5f * b.width.y);
 	    b.rotation = 0.0f;
-	    world.Add(ref b);
 
-	    for (int i = 0; i < 10; ++i)
+        for (int i = 0; i < 10; ++i)
 	    {
             b = ref sb[numBodies++];
 		    b.Set(new Vec2(1.0f, 1.0f), 1.0f);
 		    b.friction = 0.2f;
 		    float x = FMath.Random(-0.1f, 0.1f);
 		    b.position.Set(x, 0.51f + 1.05f * i);
-		    world.Add(ref b);
-	    }
+        }
     }
 
     // A pyramid
@@ -236,9 +249,8 @@ internal static class Program
 	    b.friction = 0.2f;
 	    b.position.Set(0.0f, -0.5f * b.width.y);
 	    b.rotation = 0.0f;
-	    world.Add(ref b);
 
-	    Vec2 x = new(-6.0f, 0.75f);
+        Vec2 x = new(-6.0f, 0.75f);
 	    Vec2 y;
 
 	    for (int i = 0; i < 12; ++i)
@@ -251,9 +263,8 @@ internal static class Program
 			    b.Set(new Vec2(1.0f, 1.0f), 10.0f);
 			    b.friction = 0.2f;
 			    b.position = y;
-			    world.Add(ref b);
 
-			    y += new Vec2(1.125f, 0.0f);
+                y += new Vec2(1.125f, 0.0f);
 		    }
 
 		    //x += Vec2(0.5625f, 1.125f);
@@ -267,32 +278,26 @@ internal static class Program
 	    ref Body b1 = ref sb[numBodies + 0];
 	    b1.Set(new Vec2(100.0f, 20.0f), float.MaxValue);
 	    b1.position.Set(0.0f, -0.5f * b1.width.y);
-	    world.Add(ref b1);
-		    
+
         ref Body b2 = ref sb[numBodies + 1];
 	    b2.Set(new Vec2(12.0f, 0.25f), 100.0f);
 	    b2.position.Set(0.0f, 1.0f);
-	    world.Add(ref b2);
-		    
+
         ref Body b3 = ref sb[numBodies + 2];
 	    b3.Set(new Vec2(0.5f, 0.5f), 25.0f);
 	    b3.position.Set(-5.0f, 2.0f);
-	    world.Add(ref b3);
-		    
+
         ref Body b4 = ref sb[numBodies + 3];
 	    b4.Set(new Vec2(0.5f, 0.5f), 25.0f);
 	    b4.position.Set(-5.5f, 2.0f);
-	    world.Add(ref b4);
-		    
+
         ref Body b5 = ref sb[numBodies + 4];
 	    b5.Set(new Vec2(1.0f, 1.0f), 100.0f);
 	    b5.position.Set(5.5f, 15.0f);
-	    world.Add(ref b5);
 
         ref Joint j = ref sj[numJoints++];
 	    j.Set(sb, new BodyIndex(numBodies + 0), new BodyIndex(numBodies + 1), new Vec2(0.0f, 1.0f));
-	    world.Add(ref j);
-		    
+
         numBodies += 5;
     }
 
@@ -305,9 +310,8 @@ internal static class Program
 	    b.friction = 0.2f;
 	    b.position.Set(0.0f, -0.5f * b.width.y);
 	    b.rotation = 0.0f;
-	    world.Add(ref b);
 
-	    const int numPlanks = 15;
+        const int numPlanks = 15;
 	    float mass = 50.0f;
 
 	    for (int i = 0; i < numPlanks; ++i)
@@ -316,8 +320,7 @@ internal static class Program
 		    b.Set(new Vec2(1.0f, 0.25f), mass);
 		    b.friction = 0.2f;
 		    b.position.Set(-8.5f + 1.25f * i, 5.0f);
-		    world.Add(ref b);
-	    }
+        }
 
 	    // Tuning
 	    float frequencyHz = 2.0f;
@@ -342,15 +345,12 @@ internal static class Program
 		    j.Set(sb, new BodyIndex(baseRef+i), new BodyIndex(baseRef+i+1), new Vec2(-9.125f + 1.25f * i, 5.0f));
 		    j.softness = softness;
 		    j.biasFactor = biasFactor;
-
-		    world.Add(ref j);
-	    }
+        }
 	    
         ref Joint j1 = ref sj[numJoints++];
 	    j1.Set(sb, new BodyIndex(baseRef + numPlanks), new BodyIndex(baseRef), new Vec2(-9.125f + 1.25f * numPlanks, 5.0f));
 	    j1.softness = softness;
 	    j1.biasFactor = biasFactor;
-	    world.Add(ref j1);
     }
 
     // Dominos
@@ -360,74 +360,61 @@ internal static class Program
         ref Body b = ref sb[numBodies++];
 	    b.Set(new Vec2(100.0f, 20.0f), float.MaxValue);
 	    b.position.Set(0.0f, -0.5f * b.width.y);
-	    world.Add(ref b);
-		    
+
         b = ref sb[numBodies++];
 	    b.Set(new Vec2(12.0f, 0.5f), float.MaxValue);
 	    b.position.Set(-1.5f, 10.0f);
-	    world.Add(ref b);
 
-	    for (int i = 0; i < 10; ++i)
+        for (int i = 0; i < 10; ++i)
 	    {
             b = ref sb[numBodies++];
 		    b.Set(new Vec2(0.2f, 2.0f), 10.0f);
 		    b.position.Set(-6.0f + 1.0f * i, 11.125f);
 		    b.friction = 0.1f;
-		    world.Add(ref b);
-	    }
+        }
 	    
         b = ref sb[numBodies++];
 	    b.Set(new Vec2(14.0f, 0.5f), float.MaxValue);
 	    b.position.Set(1.0f, 6.0f);
 	    b.rotation = 0.3f;
-	    world.Add(ref b);
 
         BodyIndex b2 = new BodyIndex(numBodies);
         b = ref sb[numBodies++];
 	    b.Set(new Vec2(0.5f, 3.0f), float.MaxValue);
 	    b.position.Set(-7.0f, 4.0f);
-	    world.Add(ref b);
-		    
+
         BodyIndex b3 = new BodyIndex(numBodies);
         b = ref sb[numBodies++];
 	    b.Set(new Vec2(12.0f, 0.25f), 20.0f);
 	    b.position.Set(-0.9f, 1.0f);
-	    world.Add(ref b);
-		    
+
         ref Joint j = ref sj[numJoints++];
 	    j.Set(sb, b1, b3, new Vec2(-2.0f, 1.0f));
-	    world.Add(ref j);
-		    
+
         BodyIndex b4 = new BodyIndex(numBodies);
         b = ref sb[numBodies++];
 	    b.Set(new Vec2(0.5f, 0.5f), 10.0f);
 	    b.position.Set(-10.0f, 15.0f);
-	    world.Add(ref b);
 
         j = ref sj[numJoints++];
 	    j.Set(sb, b2, b4, new Vec2(-7.0f, 15.0f));
-	    world.Add(ref j);
-		    
+
         BodyIndex b5 = new BodyIndex(numBodies);
         b = ref sb[numBodies++];
 	    b.Set(new Vec2(2.0f, 2.0f), 20.0f);
 	    b.position.Set(6.0f, 2.5f);
 	    b.friction = 0.1f;
-	    world.Add(ref b);
-		    
+
         j = ref sj[numJoints++];
 	    j.Set(sb, b1, b5, new Vec2(6.0f, 2.6f));
-	    world.Add(ref j);
-		    
+
         BodyIndex b6 = new BodyIndex(numBodies);
         b = ref sb[numBodies++];
 	    b.Set(new Vec2(2.0f, 0.2f), 10.0f);
 	    b.position.Set(6.0f, 3.6f);
-	    world.Add(ref b);
-		    
+
         j = ref sj[numJoints++];
 	    j.Set(sb, b5, b6, new Vec2(7.0f, 3.5f));
-	    world.Add(ref j);
     }
 
     // A multi-pendulum
@@ -439,9 +426,8 @@ internal static class Program
 	    b.friction = 0.2f;
 	    b.position.Set(0.0f, -0.5f * b.width.y);
 	    b.rotation = 0.0f;
-	    world.Add(ref b);
 
-	    float mass = 10.0f;
+        float mass = 10.0f;
 
 	    // Tuning
 	    float frequencyHz = 4.0f;
@@ -471,15 +457,13 @@ internal static class Program
 		    b.friction = 0.2f;
 		    b.position = x;
 		    b.rotation = 0.0f;
-		    world.Add(ref b);
-			    
+
             ref Joint j = ref sj[numJoints];
 		    j.Set(sb, b1, new BodyIndex(numBodies), new Vec2(i, y));
 		    j.softness = softness;
 		    j.biasFactor = biasFactor;
-		    world.Add(ref j);
 
-		    b1 = new BodyIndex(numBodies);
+            b1 = new BodyIndex(numBodies);
 		    ++numBodies;
 		    ++numJoints;
 	    }
@@ -511,28 +495,39 @@ internal static class Program
 	    demos[index](bodies, joints);
     }
 
-    static void SimulationLoop()
+    static void SimulationLoop(IGLFWGraphicsContext context)
     {
+        GlCheckError();
 	    GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        GlCheckError();
 
 	    DrawText(5, 15, demoStrings[demoIndex]);
+        GlCheckError();
 	    DrawText(5, 45, "Keys: 1-9 Demos, Space to Launch the Bomb");
+        GlCheckError();
 
 	    string buffer;
 	    buffer = string.Format("(A)ccumulation {0}", World.accumulateImpulses ? "ON" : "OFF");
 	    DrawText(5, 75, buffer);
+        GlCheckError();
 
         buffer = string.Format("(P)osition Correction {0}", World.positionCorrection ? "ON" : "OFF");
 	    DrawText(5, 105, buffer);
+        GlCheckError();
 
         buffer = string.Format("(W)arm Starting {0}", World.warmStarting ? "ON" : "OFF");
 	    DrawText(5, 135, buffer);
+        GlCheckError();
 
 	    GL.MatrixMode(MatrixMode.Modelview);
+        GlCheckError();
         GL.LoadIdentity();
+        GlCheckError();
         GL.Translate(0.0f, -7.0f, -25.0f);
+        GlCheckError();
 
 	    world.Step(timeStep);
+        GlCheckError();
 
 	    for (int i = 0; i < numBodies; ++i)
             DrawBody(ref bodies[i]);
@@ -540,42 +535,43 @@ internal static class Program
         for (int i = 0; i < numJoints; ++i)
             DrawJoint(ref joints[i]);
 
-        glutSwapBuffers();
+		context.SwapBuffers();
+        GlCheckError();
     }
 
-    static void Keyboard(unsigned char key, int x, int y)
+    static void Keyboard(Keys key)
     {
 	    switch (key)
 	    {
-	    case 27:
+	    case Keys.Escape:
 		    Environment.Exit(0);
 		    break;
 
-	    case '1':
-	    case '2':
-	    case '3':
-	    case '4':
-	    case '5':
-	    case '6':
-	    case '7':
-	    case '8':
-	    case '9':
-		    InitDemo(key - '1');
+	    case Keys.D1:
+	    case Keys.D2:
+	    case Keys.D3:
+	    case Keys.D4:
+	    case Keys.D5:
+	    case Keys.D6:
+	    case Keys.D7:
+	    case Keys.D8:
+	    case Keys.D9:
+		    InitDemo(key - Keys.D1);
 		    break;
 
-	    case 'a':
+	    case Keys.A:
 		    World.accumulateImpulses = !World.accumulateImpulses;
 		    break;
 
-	    case 'p':
+	    case Keys.P:
 		    World.positionCorrection = !World.positionCorrection;
 		    break;
 
-	    case 'w':
+	    case Keys.W:
 		    World.warmStarting = !World.warmStarting;
 		    break;
 
-	    case ' ':
+	    case Keys.Space:
 		    LaunchBomb();
 		    break;
 	    }
@@ -587,27 +583,88 @@ internal static class Program
 		    height = 1;
 
 	    GL.Viewport(0, 0, width, height);
+        GlCheckError();
         GL.MatrixMode(MatrixMode.Projection);
+        GlCheckError();
         GL.LoadIdentity();
+        GlCheckError();
 	    gluPerspective(45.0, (float)width/(float)height, 0.1, 100.0);
+        GlCheckError();
+    }
+
+    static void gluPerspective(double fovY, double aspectRatio, double front, double back)
+    {
+        const double DEG2RAD = 3.14159265 / 180;
+
+        double tangent = Math.Tan(fovY/2 * DEG2RAD);   // tangent of half fovY
+        double height = front * tangent;          // half height of near plane
+        double width = height * aspectRatio;      // half width of near plane
+
+        // params: left, right, bottom, top, near, far
+        GL.Frustum(-width, width, -height, height, front, back);
+    }
+
+    private static int GlThread;
+	[Conditional("DEBUG")]
+    static void GlCheckError()
+    {
+		Debug.Assert(GlThread == Thread.CurrentThread.ManagedThreadId);
+
+        ErrorCode err;
+        while((err = GL.GetError()) != ErrorCode.NoError)
+        {
+            // Process/log the error.
+			Debugger.Break();
+        }
     }
 
     static int Main(string[] args)
     {
         InitDemo(0);
 
-        glutInit(&argc, argv);
-        glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
-        glutInitWindowSize(800, 800);
-        glutCreateWindow("Box2D");
+        // glutInit(&argc, argv);
+        // glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
+        // glutInitWindowSize(800, 800);
+        // glutCreateWindow("Box2D");
 
-        glutReshapeFunc(Reshape);
-        glutDisplayFunc(SimulationLoop);
-        glutKeyboardFunc(Keyboard);
-        glutIdleFunc(SimulationLoop);
+        // glutReshapeFunc(Reshape);
+        // glutDisplayFunc(SimulationLoop);
+        // glutKeyboardFunc(Keyboard);
+        // glutIdleFunc(SimulationLoop);
+        //
+        // glutMainLoop();
 
-        glutMainLoop();
+        var gameWindowSettings = new GameWindowSettings()
+        {
+            IsMultiThreaded = false
+        };
+
+        var wndSettings = new NativeWindowSettings()
+        {
+            Size = new Vector2i(800, 600),
+			Title = "Box2D",
+            //APIVersion = new Version(2, 0),
+            Profile = ContextProfile.Compatability,
+			Flags = ContextFlags.Debug
+        };
+
+        GlThread = Thread.CurrentThread.ManagedThreadId;
+        using (var game = new Game(gameWindowSettings, wndSettings))
+        {
+            game.VSync = VSyncMode.On; // sim is bound to fps
+
+            game.Resize += eventArgs => Reshape(eventArgs.Width, eventArgs.Height);
+            game.RenderFrame += eventArgs => SimulationLoop(game.Context);
+            game.KeyDown += eventArgs => Keyboard(eventArgs.Key);
+
+			game.Run();
+        }
 
         return 0;
     }
+}
+
+class Game : GameWindow
+{
+    public Game(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : base(gameWindowSettings, nativeWindowSettings) { }
 }
