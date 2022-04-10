@@ -9,6 +9,7 @@
 * It is provided "as is" without express or implied warranty.
 */
 
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Engine.Box2D;
@@ -111,7 +112,8 @@ struct World
 
                 if (newArb.numContacts > 0)
                 {
-                    if(!arbiters.TryGetValue(key, out var arb))
+                    ref Arbiter arb = ref CollectionsMarshal.GetValueRefOrNullRef(arbiters, key);
+                    if(Unsafe.IsNullRef(ref arb))
                     {
                         arbiters.Add(key, newArb);
                     }
