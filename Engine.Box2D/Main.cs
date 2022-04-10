@@ -9,6 +9,11 @@
 * It is provided "as is" without express or implied warranty.
 */
 
+/*
+ * Source from: https://github.com/erincatto/box2d-lite
+ * Supplemental information: https://www.youtube.com/watch?v=0qqzGkbLbpM
+ */
+
 using System.Diagnostics;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;

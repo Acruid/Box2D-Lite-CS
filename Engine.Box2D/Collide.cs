@@ -172,10 +172,7 @@ internal static class Collision
 	    Mat22 RotAT = RotA.Transpose();
 	    Mat22 RotBT = RotB.Transpose();
 
-	    Vec2 a1 = RotA.col1, a2 = RotA.col2;
-	    Vec2 b1 = RotB.col1, b2 = RotB.col2;
-
-	    Vec2 dp = posB - posA;
+        Vec2 dp = posB - posA;
 	    Vec2 dA = RotAT * dp;
 	    Vec2 dB = RotBT * dp;
 
