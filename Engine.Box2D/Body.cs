@@ -56,7 +56,7 @@ public readonly struct BodyIndex : IEquatable<BodyIndex>
     #endregion
 }
 
-struct Body : IEquatable<Body>
+public struct Body : IEquatable<Body>
 {
     public Body()
     {
@@ -75,6 +75,11 @@ struct Body : IEquatable<Body>
         invI = 0.0f;
     }
 
+    /// <summary>
+    /// Sets the size and mass of the body.
+    /// </summary>
+    /// <param name="w">Sets the width and height of the body.</param>
+    /// <param name="m">Sets the mass of the body.</param>
     public void Set(in Vec2 w, float m)
     {
         position.Set(0.0f, 0.0f);

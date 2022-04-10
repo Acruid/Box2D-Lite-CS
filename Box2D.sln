@@ -4,7 +4,9 @@ VisualStudioVersion = 17.1.32319.34
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Box2D", "Box2D.vcxproj", "{2977EAE5-53D5-461D-A291-54F2F1E0A767}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Engine.Box2D", "Engine.Box2D\Engine.Box2D.csproj", "{32C78692-518C-4E8C-97F6-128DD75C38A5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Engine.Box2D", "Engine.Box2D\Engine.Box2D.csproj", "{32C78692-518C-4E8C-97F6-128DD75C38A5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Engine.Box2D.Tests", "Engine.Box2D.Tests\Engine.Box2D.Tests.csproj", "{A438C1DA-088F-45EC-9614-5F43014EB3A6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,6 +32,14 @@ Global
 		{32C78692-518C-4E8C-97F6-128DD75C38A5}.Release|Any CPU.Build.0 = Release|Any CPU
 		{32C78692-518C-4E8C-97F6-128DD75C38A5}.Release|Win32.ActiveCfg = Release|Any CPU
 		{32C78692-518C-4E8C-97F6-128DD75C38A5}.Release|Win32.Build.0 = Release|Any CPU
+		{A438C1DA-088F-45EC-9614-5F43014EB3A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A438C1DA-088F-45EC-9614-5F43014EB3A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A438C1DA-088F-45EC-9614-5F43014EB3A6}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{A438C1DA-088F-45EC-9614-5F43014EB3A6}.Debug|Win32.Build.0 = Debug|Any CPU
+		{A438C1DA-088F-45EC-9614-5F43014EB3A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A438C1DA-088F-45EC-9614-5F43014EB3A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A438C1DA-088F-45EC-9614-5F43014EB3A6}.Release|Win32.ActiveCfg = Release|Any CPU
+		{A438C1DA-088F-45EC-9614-5F43014EB3A6}.Release|Win32.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

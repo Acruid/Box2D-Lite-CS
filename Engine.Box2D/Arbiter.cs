@@ -14,7 +14,7 @@ using OpenTK.Graphics.OpenGL;
 
 namespace Engine.Box2D;
 
-struct Edges
+public struct Edges
 {
     public byte inEdge1;
     public byte outEdge1;
@@ -23,7 +23,7 @@ struct Edges
 }
 
 [StructLayout(LayoutKind.Explicit)]
-struct FeaturePair
+public struct FeaturePair
 {
     [FieldOffset(0)]
     public Edges e;
@@ -32,7 +32,7 @@ struct FeaturePair
 	public int value;
 };
 
-struct Contact
+public struct Contact
 {
     public Vec2 position;
     public Vec2 normal;
@@ -111,7 +111,7 @@ readonly struct ArbiterKey : IEquatable<ArbiterKey>
     #endregion
 };
 
-struct Arbiter
+public struct Arbiter
 {
 	const int MAX_POINTS = 2;
 
@@ -135,6 +135,7 @@ struct Arbiter
 
         friction = MathF.Sqrt(body1.friction * body2.friction);
 
+#if false
         GL.PointSize(4.0f);
         GL.Color3(1.0f, 0.0f, 0.0f);
         GL.Begin(BeginMode.Points);
@@ -144,6 +145,7 @@ struct Arbiter
         }
         GL.End();
         GL.PointSize(1.0f);
+#endif
     }
 
     public void Update(Contact[] newContacts, int numNewContacts)
