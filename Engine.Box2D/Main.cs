@@ -102,12 +102,8 @@ internal static class Program
         GL.Color3(1f, 0.5f, 0.0f);
         GL.Vertex2(x.x, x.y);
         GL.Vertex2(x.x + v.x, x.y + v.y);
-		
-        // GL.Color3(0.8f, 0.8f, 0.9f);
-        // GL.Vertex2(x.x, x.y);
-        // GL.Vertex2(x.x, x.y);
 
-		GL.End();
+        GL.End();
     }
 
     static void DrawJoint(ref Joint joint)
@@ -134,6 +130,20 @@ internal static class Program
         GL.Vertex2(p2.x, p2.y);
         GL.End();
         GlCheckError();
+    }
+
+    public static void DrawArbiterContacts(ref Arbiter newArb)
+    {
+        GL.PointSize(4.0f);
+        GL.Color3(1.0f, 0.0f, 0.0f);
+        GL.Begin(PrimitiveType.Points);
+        for (int i = 0; i < newArb.numContacts; ++i)
+        {
+            GL.Vertex2(newArb.contacts[i].position.x, newArb.contacts[i].position.y);
+        }
+
+        GL.End();
+        GL.PointSize(1.0f);
     }
 
     static void LaunchBomb()

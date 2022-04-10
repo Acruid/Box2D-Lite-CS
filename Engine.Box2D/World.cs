@@ -107,6 +107,8 @@ struct World
                 Arbiter newArb = new(spanBodies, new BodyIndex(i), new BodyIndex(j));
                 ArbiterKey key = new(new BodyIndex(i), new BodyIndex(j));
 
+                Program.DrawArbiterContacts(ref newArb);
+
                 if (newArb.numContacts > 0)
                 {
                     if(!arbiters.TryGetValue(key, out var arb))

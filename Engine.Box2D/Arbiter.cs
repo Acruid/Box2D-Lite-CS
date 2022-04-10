@@ -10,7 +10,6 @@
 */
 
 using System.Runtime.InteropServices;
-using OpenTK.Graphics.OpenGL;
 
 namespace Engine.Box2D;
 
@@ -134,18 +133,6 @@ public struct Arbiter
         numContacts = Collision.Collide(contacts, ref body1, ref body2);
 
         friction = MathF.Sqrt(body1.friction * body2.friction);
-
-#if false
-        GL.PointSize(4.0f);
-        GL.Color3(1.0f, 0.0f, 0.0f);
-        GL.Begin(BeginMode.Points);
-        for (int i = 0; i < numContacts; ++i)
-        {
-            GL.Vertex2(contacts[i].position.x, contacts[i].position.y);
-        }
-        GL.End();
-        GL.PointSize(1.0f);
-#endif
     }
 
     public void Update(Contact[] newContacts, int numNewContacts)
